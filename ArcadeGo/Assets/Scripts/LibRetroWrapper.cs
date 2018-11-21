@@ -56,34 +56,36 @@ namespace LibRetroWrapper
             {
                 case RetroEnums.RetroPixelFormat.RETRO_PIXEL_FORMAT_XRGB8888:
                     {
-                        int size = (int)(width * height * sizeof(uint));
+                        int sourceSize = (int)(pitch * height);
+                        int destSize = (int)(width * height * sizeof(uint));
 
-                        if (tex == null || dest == null || width > current_width || height > current_height)
+                        if (tex == null || dest == null || width != current_width || height != current_height)
                         {
                             Debug.LogFormat("Width: {0} Height: {1} Pitch: {2}", width, height, pitch);
                             tex = new Texture2D((int)width, (int)height, TextureFormat.BGRA32, false);
-                            dest = new byte[size];
+
+                            source = new byte[sourceSize];
+                            dest = new byte[destSize];
                         }
 
                         current_width = width;
                         current_height = height;
                         current_pitch = pitch;
+
+                        Marshal.Copy(pixels, source, 0, destSize);
                         
+                        int idx = 0;
+                        int offset = 0;
+                        for (int y = 0; y < height; y++)
+                        {
+                            for (int x = 0; x < width * sizeof(uint); x++)
+                            {
+                                dest[idx] = source[offset + x];
+                                idx++;
+                            }
+                            offset += (int)pitch;
+                        }
 
-                        //int idx = 0;
-                        //for (int y = 0; y < height; y++)
-                        //{
-                        //    int offset = (int)(y * pitch);
-                        //    for (int x = 0; x < width; x++)
-                        //    {
-                        //        offset += x * sizeof(uint);
-                        //        idx++;
-                                
-                                
-                        //    }
-                        //}
-
-                        Marshal.Copy(pixels, dest, 0, size);
 
                         tex.LoadRawTextureData(dest);
                         tex.filterMode = FilterMode.Point;
@@ -127,7 +129,6 @@ namespace LibRetroWrapper
 
             AudioClip clip = AudioClip.Create("sample", (int)frames, 1, 44100, false);
             clip.SetData(samples, 0);
-            _audio.Stop();
             _audio.PlayOneShot(clip);
         }
 

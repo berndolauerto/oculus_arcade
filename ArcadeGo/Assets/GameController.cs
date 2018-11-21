@@ -11,7 +11,7 @@ public class GameController : MonoBehaviour {
     private LibRetroWrapper.RetroWrapper wrapper = null;
     private bool romLoaded = false;
 
-    private string cueName = "TimeCrisis.cue";
+    private string cueName = "DinoCrisis1.cue";
 
     // Use this for initialization
     void Start () {
