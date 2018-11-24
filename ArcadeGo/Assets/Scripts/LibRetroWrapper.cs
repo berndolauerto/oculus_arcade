@@ -33,14 +33,6 @@ namespace LibRetroWrapper
         private DelegateDefinition.RetroInputStateDelegate _inputState;
         private DelegateDefinition.RetroLogDelegate _logDelegate;
 
-        private DelegateDefinition.RetroSetEjectState _setEjectState;
-        private DelegateDefinition.RetroGetEjectState _getEjectState;
-        private DelegateDefinition.RetroGetImageIndex _getImageIndex;
-        private DelegateDefinition.RetroSetImageIndex _setImageIndex;
-        private DelegateDefinition.RetroGetNumImages _getNumImages;
-        private DelegateDefinition.RetroReplaceImageIndex _replaceImageIndex;
-        private DelegateDefinition.RetroAddImageIndex _retroAddImageIndex;
-
         public static byte[] source;
         public static byte[] dest;
 
@@ -193,6 +185,7 @@ namespace LibRetroWrapper
             throw new NotImplementedException();
         }
 
+        bool _hasUpdated = true;
         public unsafe bool RetroEnvironment(uint cmd, void * data)
         {
             IntPtr ptr = new IntPtr(data);
@@ -243,9 +236,75 @@ namespace LibRetroWrapper
                 case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
                     {
                         bool* hasUpdated = (bool*)data;
-                        *hasUpdated = false;
+                        *hasUpdated = _hasUpdated;
+                        _hasUpdated = false;
                     }
                     break;
+
+                case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_SET_VARIABLES:
+                    if (data != null)
+                    {
+                        {
+                            RetroStructs.RetroVariable* variable = (RetroStructs.RetroVariable*)data;
+                            while (variable->key != null)
+                            {
+                                string key = Marshal.PtrToStringAnsi((IntPtr)variable->key);
+                                string value = Marshal.PtrToStringAnsi((IntPtr)variable->value);
+
+                                string options = value.Split(';')[1];
+                                string default_option = options.Split('|')[0].Trim();
+
+                                environment_settings.Add(key, default_option);
+
+                                variable++;
+                            }
+                        }
+                    }
+
+                    return true;
+
+                //break;
+
+                case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_GET_VARIABLE:
+                    {
+                        RetroStructs.RetroVariable* variable = (RetroStructs.RetroVariable*)data;
+                        string key = Marshal.PtrToStringAnsi((IntPtr)variable->key);
+                        try
+                        {
+                            Debug.LogFormat("Key: {0}", key);
+                            string value = environment_settings[key];
+                            variable->value = StringToChar(value);
+
+                            Debug.LogFormat("Environment variable: {0} => {1}", key, value);
+                            return true;
+                        }
+                        catch (System.Collections.Generic.KeyNotFoundException e)
+                        {
+                            Debug.LogFormat("############## Couldn't find environment option: {0}", constant.ToString());
+                            switch(key)
+                            {
+                                case "bettle_psx_filter":
+                                    variable->value = StringToChar("nearest");
+                                    return true;
+                                case "beetle_psx_pgxp_mode":
+                                    variable->value = StringToChar("memory only");
+                                    return true;
+                                case "beetle_psx_pgxp_texture":
+                                    variable->value = StringToChar("enabled");
+                                    return true;
+
+                                case "beetle_psx_pgxp_vertex":
+                                    variable->value = StringToChar("enabled");
+                                    return true;
+
+                                default:
+                                    break;
+                            }
+
+                            return false;
+                        }
+                    }
+                break;
 
                 default:
                     Debug.LogFormat("Unimplemented environment constant: {0}", constant.ToString());
@@ -279,14 +338,6 @@ namespace LibRetroWrapper
             _inputPoll = new DelegateDefinition.RetroInputPollDelegate(RetroInputPoll);
             _inputState = new DelegateDefinition.RetroInputStateDelegate(RetroInputState);
             _logDelegate = new DelegateDefinition.RetroLogDelegate(RetroLogCallback);
-
-            _setEjectState = new DelegateDefinition.RetroSetEjectState(RetroSetEjectState);
-            _getEjectState = new DelegateDefinition.RetroGetEjectState(RetroGetEjectState);
-            _getImageIndex = new DelegateDefinition.RetroGetImageIndex(RetroGetImageIndex);
-            _setImageIndex = new DelegateDefinition.RetroSetImageIndex(RetroSetImageIndex);
-            _getNumImages = new DelegateDefinition.RetroGetNumImages(RetroGetNumImages);
-            _replaceImageIndex = new DelegateDefinition.RetroReplaceImageIndex(RetroReplaceImageIndex);
-            _retroAddImageIndex = new DelegateDefinition.RetroAddImageIndex(RetroAddImageIndex);
 
             RetroImports.RetroSetEnvironment(_environment);
             RetroImports.RetroSetVideoRefresh(_videoRefresh);
