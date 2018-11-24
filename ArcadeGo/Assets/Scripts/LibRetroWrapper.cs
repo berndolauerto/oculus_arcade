@@ -64,19 +64,25 @@ namespace LibRetroWrapper
                         current_height = height;
                         current_pitch = pitch;
 
-                        Marshal.Copy(pixels, source, 0, destSize);
+                        Marshal.Copy(pixels, source, 0, sourceSize);
                         
-                        int idx = 0;
-                        int offset = 0;
-                        for (int y = 0; y < height; y++)
+                        try
                         {
-                            for (int x = 0; x < width * sizeof(uint); x++)
+                            int idx = 0;
+                            for (int y = 0; y < height; y++)
                             {
-                                dest[idx] = source[offset + x];
-                                idx++;
+                                for (int x = 0; x < width * sizeof(uint); x++)
+                                {
+                                    dest[idx] = source[pitch*y + x];
+                                    idx++;
+                                }
                             }
-                            offset += (int)pitch;
                         }
+                        catch(IndexOutOfRangeException e )
+                        {
+                            // do nothing
+                        }
+                        
 
 
                         tex.LoadRawTextureData(dest);
@@ -184,8 +190,7 @@ namespace LibRetroWrapper
         {
             throw new NotImplementedException();
         }
-
-        bool _hasUpdated = true;
+        
         public unsafe bool RetroEnvironment(uint cmd, void * data)
         {
             IntPtr ptr = new IntPtr(data);
@@ -236,8 +241,7 @@ namespace LibRetroWrapper
                 case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
                     {
                         bool* hasUpdated = (bool*)data;
-                        *hasUpdated = _hasUpdated;
-                        _hasUpdated = false;
+                        *hasUpdated = false;
                     }
                     break;
 
@@ -263,8 +267,6 @@ namespace LibRetroWrapper
 
                     return true;
 
-                //break;
-
                 case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_GET_VARIABLE:
                     {
                         RetroStructs.RetroVariable* variable = (RetroStructs.RetroVariable*)data;
@@ -281,30 +283,10 @@ namespace LibRetroWrapper
                         catch (System.Collections.Generic.KeyNotFoundException e)
                         {
                             Debug.LogFormat("############## Couldn't find environment option: {0}", constant.ToString());
-                            switch(key)
-                            {
-                                case "bettle_psx_filter":
-                                    variable->value = StringToChar("nearest");
-                                    return true;
-                                case "beetle_psx_pgxp_mode":
-                                    variable->value = StringToChar("memory only");
-                                    return true;
-                                case "beetle_psx_pgxp_texture":
-                                    variable->value = StringToChar("enabled");
-                                    return true;
-
-                                case "beetle_psx_pgxp_vertex":
-                                    variable->value = StringToChar("enabled");
-                                    return true;
-
-                                default:
-                                    break;
-                            }
 
                             return false;
                         }
                     }
-                break;
 
                 default:
                     Debug.LogFormat("Unimplemented environment constant: {0}", constant.ToString());
