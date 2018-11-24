@@ -127,5 +127,19 @@ namespace LibRetroWrapper
             public IntPtr rename;
             public IntPtr truncate;
         };
+
+        [StructLayout(LayoutKind.Sequential)]
+        public unsafe struct RetroControllerDescription
+        {
+            public char * desc;
+            public uint id;
+        };
+
+        [StructLayout(LayoutKind.Sequential)]
+        public unsafe struct RetroControllerInfo
+        {
+            public RetroControllerDescription *types;
+            public uint num_types;
+        };
     }
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Runtime.InteropServices;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GameController : MonoBehaviour {
 
@@ -11,7 +8,7 @@ public class GameController : MonoBehaviour {
     private LibRetroWrapper.RetroWrapper wrapper = null;
     private bool romLoaded = false;
 
-    private string cueName = "DinoCrisis1.cue";
+    private string cueName = "PointBlank3.cue";
 
     // Use this for initialization
     void Start () {

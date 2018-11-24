@@ -45,6 +45,9 @@ namespace LibRetroWrapper
         [DllImport(corefile, EntryPoint = "retro_set_environment")]
         public static extern bool RetroSetEnvironment(DelegateDefinition.RetroEnvironmentDelegate r);
 
+        [DllImport(corefile, EntryPoint = "retro_set_controller_port_device")]
+        public static extern void RetroSetControllerPortDevice(uint port, uint device);
+
         [DllImport(corefile, EntryPoint = "retro_run")]
         public static extern void RetroRun();
 

@@ -17,9 +17,6 @@ namespace LibRetroWrapper
         public bool requiresFullPath;
         public Texture2D tex = null;
         public AudioSource _audio = null;
-        public const int AudioBatchSize = 4096;
-        public static float[] AudioBatch = new float[AudioBatchSize];
-        public static int BatchPosition;
         public string systemDirectory;
 
         private System.Collections.Generic.Dictionary<string, string> environment_settings = new System.Collections.Generic.Dictionary<string, string>();
@@ -66,25 +63,16 @@ namespace LibRetroWrapper
 
                         Marshal.Copy(pixels, source, 0, sourceSize);
                         
-                        try
+                        int idx = 0;
+                        for (int y = 0; y < height; y++)
                         {
-                            int idx = 0;
-                            for (int y = 0; y < height; y++)
+                            for (int x = 0; x < width * sizeof(uint); x++)
                             {
-                                for (int x = 0; x < width * sizeof(uint); x++)
-                                {
-                                    dest[idx] = source[pitch*y + x];
-                                    idx++;
-                                }
+                                dest[idx] = source[pitch*y + x];
+                                idx++;
                             }
                         }
-                        catch(IndexOutOfRangeException e )
-                        {
-                            // do nothing
-                        }
                         
-
-
                         tex.LoadRawTextureData(dest);
                         tex.filterMode = FilterMode.Point;
 
@@ -101,8 +89,7 @@ namespace LibRetroWrapper
         {
             throw new NotImplementedException();
         }
-
-        private float[] samples = null;
+        
         public unsafe void RetroAudioSampleBatch(short* data, uint frames)
         {
             if (_audio == null)
@@ -111,17 +98,12 @@ namespace LibRetroWrapper
             }
 
             short* ptr = data;
-
-            if (samples == null || samples.Length < frames)
-            {
-                samples = new float[frames];
-            }
+            float[] samples = new float[frames];
 
             for (int i = 0; i < frames; i++)
             {
                 float value = Mathf.Clamp(*ptr / 32768.0f,-1.0f,1.0f);
                 samples[i] = value;
-
                 ptr += sizeof(short);
             }
 
@@ -138,6 +120,7 @@ namespace LibRetroWrapper
         public unsafe ushort RetroInputState(uint port, uint device, uint index, uint id)
         {
             // todo
+
             return 0;
         }
 
@@ -273,20 +256,53 @@ namespace LibRetroWrapper
                         string key = Marshal.PtrToStringAnsi((IntPtr)variable->key);
                         try
                         {
-                            Debug.LogFormat("Key: {0}", key);
                             string value = environment_settings[key];
                             variable->value = StringToChar(value);
-
-                            Debug.LogFormat("Environment variable: {0} => {1}", key, value);
                             return true;
                         }
                         catch (System.Collections.Generic.KeyNotFoundException e)
                         {
-                            Debug.LogFormat("############## Couldn't find environment option: {0}", constant.ToString());
-
                             return false;
                         }
                     }
+
+                case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
+                    return false;
+
+                case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE:
+                    return false;
+
+                case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
+                    RetroStructs.RetroControllerInfo* controllerInfo = (RetroStructs.RetroControllerInfo*)data;
+                    while(controllerInfo->types != null)
+                    {
+                        RetroStructs.RetroControllerDescription* description = (RetroStructs.RetroControllerDescription*)controllerInfo->types;
+
+                        string descText = Marshal.PtrToStringAnsi((IntPtr)description->desc);
+                        uint id = description->id;
+                        Debug.LogFormat("#### Controller {0} description: {1}", id, descText);
+
+                        controllerInfo++;
+                    }
+                    return true;
+
+                case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
+                    RetroStructs.RetroInputDescriptor* inputs = (RetroStructs.RetroInputDescriptor*)data;
+                    while(inputs->description != null)
+                    {
+                        uint port = inputs->port;
+                        uint device = inputs->device;
+                        uint index = inputs->index;
+                        uint id = inputs->id;
+
+                        string descText = Marshal.PtrToStringAnsi((IntPtr)inputs->description);
+
+                        Debug.LogFormat("### Port: {0} Device: {1} Index: {2} Id: {3} Desc:{4}",
+                            port, device, index, id, descText);
+
+                        inputs++;
+                    }
+                    break;
 
                 default:
                     Debug.LogFormat("Unimplemented environment constant: {0}", constant.ToString());
@@ -327,7 +343,7 @@ namespace LibRetroWrapper
             RetroImports.RetroSetAudioSampleBatch(_audioSampleBatch);
             RetroImports.RetroSetInputPoll(_inputPoll);
             RetroImports.RetroSetInputState(_inputState);
-
+            
             RetroImports.RetroInit();
         }
 
@@ -364,6 +380,8 @@ namespace LibRetroWrapper
                 RetroStructs.RetroSystemAVInfo av = new RetroStructs.RetroSystemAVInfo();
                 RetroImports.RetroGetSystemAVInfo(ref av);
             }
+            
+            RetroImports.RetroSetControllerPortDevice(0, (uint)RetroEnums.RetroDevices.RETRO_DEVICE_LIGHTGUN);
 
             return ret;
         }
