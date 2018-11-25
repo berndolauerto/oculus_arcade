@@ -56,7 +56,6 @@ namespace LibRetroWrapper
 
                         if (tex == null || dest == null || width != current_width || height != current_height)
                         {
-                            Debug.LogFormat("Width: {0} Height: {1} Pitch: {2}", width, height, pitch);
                             tex = new Texture2D((int)width, (int)height, TextureFormat.BGRA32, false);
 
                             source = new byte[sourceSize];

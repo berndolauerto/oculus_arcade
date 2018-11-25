@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.IO;
 
 public class GameController : MonoBehaviour {
 
@@ -10,19 +11,51 @@ public class GameController : MonoBehaviour {
 
     private string cueName = "TimeCrisis.cue";
 
+    void CopyAssetsToPersistentData()
+    {
+        string path = "jar:file://" + Application.dataPath + "!/assets/";
+        string cueFilePath = Application.persistentDataPath + "/TimeCrisis.cue";
+        if (File.Exists(cueFilePath) == false)
+        {
+            WWW cue = new WWW(path + "TimeCrisis.cue");
+            while (cue.isDone == false) { };
+            File.WriteAllBytes(cueFilePath, cue.bytes);
+        }
+
+        string binFilePath = Application.persistentDataPath + "/TimeCrisis.bin";
+        if (File.Exists(binFilePath) == false)
+        {
+            WWW bin = new WWW(path + "TimeCrisis.bin");
+            while (bin.isDone == false) { };
+            File.WriteAllBytes(binFilePath, bin.bytes);
+        }
+
+        string biosFilePath = Application.persistentDataPath + "/SCPH5502.BIN";
+        if (File.Exists(biosFilePath) == false)
+        {
+            WWW bios = new WWW(path + "SCPH5502.BIN");
+            while (bios.isDone == false) { };
+            File.WriteAllBytes(biosFilePath, bios.bytes);
+        }
+    }
+
     // Use this for initialization
     void Start () {
         Application.targetFrameRate = 60;
 
         unsafe
         {
+
 #if UNITY_EDITOR
             string systemPath = "D:/roms";
             string romPath = systemPath + "/" + cueName;
+
 #else
+            CopyAssetsToPersistentData();
             string systemPath = Application.persistentDataPath;
-            string romPath = systemPath + "/" + cueName";
+            string romPath = Application.persistentDataPath + "/" + cueName;
 #endif
+
             wrapper = new LibRetroWrapper.RetroWrapper();
             wrapper.systemDirectory = systemPath;
 
@@ -30,8 +63,6 @@ public class GameController : MonoBehaviour {
             wrapper.Initialise();
 
             romLoaded = wrapper.LoadRom(romPath);
-
-            Debug.LogFormat("Loading -> {0} = {1}", romPath, romLoaded);
         }
     }
 
