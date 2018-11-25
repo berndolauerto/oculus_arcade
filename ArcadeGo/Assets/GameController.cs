@@ -8,7 +8,7 @@ public class GameController : MonoBehaviour {
     private LibRetroWrapper.RetroWrapper wrapper = null;
     private bool romLoaded = false;
 
-    private string cueName = "PointBlank3.cue";
+    private string cueName = "TimeCrisis.cue";
 
     // Use this for initialization
     void Start () {
@@ -36,9 +36,12 @@ public class GameController : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
+    void Update()
+    {
         if (wrapper != null)
         {
+            ControlUpdate();
+
             if (romLoaded)
             {
                 wrapper.Update();
@@ -58,5 +61,31 @@ public class GameController : MonoBehaviour {
             Debug.Log("Destroying core");
             wrapper.Shutdown();
         }
+    }
+
+    private void ControlUpdate()
+    {
+        short delta = 400;
+
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            wrapper.gun_x-=delta;
+        }
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            wrapper.gun_x+=delta;
+        }
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            wrapper.gun_y -= delta;
+        }
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+            wrapper.gun_y += delta;
+        }
+
+        wrapper.trigger = Input.GetKey(KeyCode.Space);
+        wrapper.a_button = Input.GetKey(KeyCode.A);
+        wrapper.b_button = Input.GetKey(KeyCode.D);
     }
 }

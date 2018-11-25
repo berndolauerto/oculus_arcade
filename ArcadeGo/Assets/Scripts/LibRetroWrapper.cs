@@ -37,6 +37,12 @@ namespace LibRetroWrapper
         private uint current_height = 0;
         private uint current_pitch = 0;
 
+        public bool trigger = false;
+        public bool a_button = false;
+        public bool b_button = false;
+        public Int16 gun_x = 0;
+        public Int16 gun_y = 0;
+
         private unsafe void RetroVideoRefresh(void* data, uint width, uint height, uint pitch)
         {
             IntPtr pixels = (IntPtr)data;
@@ -114,13 +120,34 @@ namespace LibRetroWrapper
 
         public unsafe void RetroInputPoll()
         {
-            // todo
+            
         }
 
-        public unsafe ushort RetroInputState(uint port, uint device, uint index, uint id)
+        public unsafe Int16 RetroInputState(uint port, uint device, uint index, uint id)
         {
-            // todo
-
+            if (port == 0 && device == (uint)RetroEnums.RetroDevices.RETRO_DEVICE_LIGHTGUN)
+            {
+                if (id == (uint)RetroEnums.RetroLightgun.RETRO_DEVICE_ID_LIGHTGUN_SCREEN_X)
+                {
+                    return gun_x;
+                }
+                if (id == (uint)RetroEnums.RetroLightgun.RETRO_DEVICE_ID_LIGHTGUN_SCREEN_Y)
+                {
+                    return gun_y;
+                }
+                if (id == (uint)RetroEnums.RetroLightgun.RETRO_DEVICE_ID_LIGHTGUN_TRIGGER)
+                {
+                    return (short)(trigger ? 1 : 0);
+                }
+                if (id == (uint)RetroEnums.RetroLightgun.RETRO_DEVICE_ID_LIGHTGUN_AUX_A)
+                {
+                    return (short)(a_button ? 1 : 0);
+                }
+                if (id == (uint)RetroEnums.RetroLightgun.RETRO_DEVICE_ID_LIGHTGUN_AUX_B)
+                {
+                    return (short)(b_button ? 1 : 0);
+                }
+            }
             return 0;
         }
 
@@ -272,6 +299,9 @@ namespace LibRetroWrapper
                 case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE:
                     return false;
 
+                case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE:
+                    return false;
+
                 case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
                     RetroStructs.RetroControllerInfo* controllerInfo = (RetroStructs.RetroControllerInfo*)data;
                     while(controllerInfo->types != null)
@@ -372,16 +402,17 @@ namespace LibRetroWrapper
         {
             rom_path = pathToRom;
             gameInfo.path = StringToChar(rom_path);
-
+            
             bool ret = RetroImports.RetroLoadGame(ref gameInfo);
 
             if (ret)
             {
                 RetroStructs.RetroSystemAVInfo av = new RetroStructs.RetroSystemAVInfo();
                 RetroImports.RetroGetSystemAVInfo(ref av);
+
+                // annoyingly mednafen maps guncon to 260 NOT 4 which is the lightgun value
+                RetroImports.RetroSetControllerPortDevice(0, 260);
             }
-            
-            RetroImports.RetroSetControllerPortDevice(0, (uint)RetroEnums.RetroDevices.RETRO_DEVICE_LIGHTGUN);
 
             return ret;
         }

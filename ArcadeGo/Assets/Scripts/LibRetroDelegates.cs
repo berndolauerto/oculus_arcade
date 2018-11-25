@@ -18,7 +18,7 @@ namespace LibRetroWrapper
         public delegate void RetroInputPollDelegate();
 
         //typedef int16_t (*retro_input_state_t)(unsigned port, unsigned device, unsigned index, unsigned id);
-        public delegate ushort RetroInputStateDelegate(uint port, uint device, uint index, uint id);
+        public delegate Int16 RetroInputStateDelegate(uint port, uint device, uint index, uint id);
 
         //typedef bool (*retro_environment_t)(unsigned cmd, void *data);
         public unsafe delegate bool RetroEnvironmentDelegate(uint cmd, void* data);
