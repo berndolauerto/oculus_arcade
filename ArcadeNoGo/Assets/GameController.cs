@@ -18,7 +18,7 @@ public class GameController : MonoBehaviour {
         {
 #if UNITY_EDITOR
             string systemPath = "D:/roms";
-            string romPath = systemPath + "/" + cueName;
+            string romPath = systemPath + "/" + cueName;  
 #else
             string systemPath = Application.persistentDataPath;
             string romPath = systemPath + "/" + cueName";
