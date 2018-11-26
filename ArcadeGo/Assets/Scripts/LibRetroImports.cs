@@ -7,7 +7,7 @@ namespace LibRetroWrapper
     {
         // core name
 #if !UNITY_EDITOR
-        public const string corefile = "retropsx";
+        public const string corefile = "retropsxhw";//"retropsx";
 #else
         public const string corefile = "mednafen_psx_libretro";// "pcsx_rearmed_libretro";
 #endif

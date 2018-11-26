@@ -79,7 +79,7 @@ namespace LibRetroWrapper
                         }
                         
                         tex.LoadRawTextureData(dest);
-                        tex.filterMode = FilterMode.Point;
+                        tex.filterMode = FilterMode.Bilinear;
 
                         tex.Apply();
                     }
@@ -309,7 +309,7 @@ namespace LibRetroWrapper
 
                         string descText = Marshal.PtrToStringAnsi((IntPtr)description->desc);
                         uint id = description->id;
-                        Debug.LogFormat("#### Controller {0} description: {1}", id, descText);
+                        //Debug.LogFormat("#### Controller {0} description: {1}", id, descText);
 
                         controllerInfo++;
                     }
@@ -326,8 +326,8 @@ namespace LibRetroWrapper
 
                         string descText = Marshal.PtrToStringAnsi((IntPtr)inputs->description);
 
-                        Debug.LogFormat("### Port: {0} Device: {1} Index: {2} Id: {3} Desc:{4}",
-                            port, device, index, id, descText);
+                        //Debug.LogFormat("### Port: {0} Device: {1} Index: {2} Id: {3} Desc:{4}",
+                        //    port, device, index, id, descText);
 
                         inputs++;
                     }
