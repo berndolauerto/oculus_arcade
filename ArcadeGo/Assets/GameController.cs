@@ -122,6 +122,7 @@ public class GameController : MonoBehaviour {
         wrapper.a_button = Input.GetKey(KeyCode.A);
         wrapper.b_button = Input.GetKey(KeyCode.D);
 
+#else
         Vector3 origin = tracker.transform.position;
         Vector3 direction = new Vector3(0, 0, 1);
         direction = tracker.transform.rotation*direction;
@@ -146,7 +147,6 @@ public class GameController : MonoBehaviour {
             wrapper.gun_x = (short)Mathf.Clamp(((-relativePosition.x / 5.0f) * horizontal_range), -horizontal_range, horizontal_range);
         }
 
-#else
         wrapper.trigger = OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger);
         wrapper.a_button = OVRInput.Get(OVRInput.Button.PrimaryTouchpad);
 #endif

@@ -9,7 +9,7 @@ namespace LibRetroWrapper
 #if !UNITY_EDITOR
         public const string corefile = "retropsxhw";//"retropsx";
 #else
-        public const string corefile = "mednafen_psx_libretro";// "pcsx_rearmed_libretro";
+        public const string corefile = "mednafen_psx_hw_libretro";// "pcsx_rearmed_libretro";
 #endif
 
         [DllImport(corefile, EntryPoint = "retro_api_version")]
