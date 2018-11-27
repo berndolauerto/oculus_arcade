@@ -45,7 +45,7 @@ namespace LibRetroWrapper
 
         private unsafe void RetroVideoRefresh(void* data, uint width, uint height, uint pitch)
         {
-            IntPtr pixels = (IntPtr)data;
+            byte * pixels = (byte*)data;
             
             switch (pixelFormat)
             {
@@ -57,23 +57,19 @@ namespace LibRetroWrapper
                         if (tex == null || dest == null || width != current_width || height != current_height)
                         {
                             tex = new Texture2D((int)width, (int)height, TextureFormat.BGRA32, false);
-
-                            source = new byte[sourceSize];
                             dest = new byte[destSize];
                         }
 
                         current_width = width;
                         current_height = height;
                         current_pitch = pitch;
-
-                        Marshal.Copy(pixels, source, 0, sourceSize);
                         
                         int idx = 0;
                         for (int y = 0; y < height; y++)
                         {
                             for (int x = 0; x < width * sizeof(uint); x++)
                             {
-                                dest[idx] = source[pitch*y + x];
+                                dest[idx] = pixels[pitch*y + x];
                                 idx++;
                             }
                         }
@@ -267,6 +263,8 @@ namespace LibRetroWrapper
                                 string options = value.Split(';')[1];
                                 string default_option = options.Split('|')[0].Trim();
 
+                                Debug.LogFormat("Var: {0} Options: {1}", key, options);
+
                                 environment_settings.Add(key, default_option);
 
                                 variable++;
@@ -283,7 +281,44 @@ namespace LibRetroWrapper
                         try
                         {
                             string value = environment_settings[key];
+                            switch (key)
+                            {
+                                case "beetle_psx_skip_bios":
+                                case "beetle_psx_hw_skip_bios":
+                                    value = "enabled";
+                                    break;
+                                case "beetle_psx_cd_access_method":
+                                case "beetle_psx_hw_cd_access_method":
+                                    value = "precache";
+                                    break;
+
+                                //case "beetle_psx_frame_duping":
+                                //case "beetle_psx_hw_frame_duping":
+                                //    value = "enabled";
+                                //    break;
+
+                                //case "beetle_psx_adaptive_smoothing":
+                                //case "beetle_psx_hw_adaptive_smoothing":
+                                //    value = "disabled";
+                                //    break;
+                                
+#if UNITY_EDITOR
+                                case "beetle_psx_hw_display_internal_fps":
+                                    value = "enabled";
+                                    break;
+#else
+                                case "beetle_psx_gun_cursor":
+                                case "beetle_psx_hw_gun_cursor":
+                                    value = "Off";
+                                    break;
+#endif
+
+                                default:
+                                    break;
+                            }
+
                             variable->value = StringToChar(value);
+
                             return true;
                         }
                         catch (System.Collections.Generic.KeyNotFoundException e)
