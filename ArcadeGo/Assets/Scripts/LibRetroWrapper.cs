@@ -92,26 +92,28 @@ namespace LibRetroWrapper
             throw new NotImplementedException();
         }
         
+
         public unsafe void RetroAudioSampleBatch(short* data, uint frames)
         {
-            //if (_audio == null)
-            //{
-            //    return;
-            //}
+            if (_audio == null)
+            {
+                return;
+            }
+            
+            short* ptr = data;
+            float[] samples = new float[frames];
 
-            //short* ptr = data;
-            //float[] samples = new float[frames];
+            for (int i = 0; i < frames; i++)
+            {
+                float value = Mathf.Clamp(*ptr / 32768.0f,-1.0f,1.0f);
+                samples[i] = value;
+                ptr += sizeof(short);
+            }
 
-            //for (int i = 0; i < frames; i++)
-            //{
-            //    float value = Mathf.Clamp(*ptr / 32768.0f,-1.0f,1.0f);
-            //    samples[i] = value;
-            //    ptr += sizeof(short);
-            //}
-
-            //AudioClip clip = AudioClip.Create("sample", (int)frames, 1, 44100, false);
-            //clip.SetData(samples, 0);
-            //_audio.PlayOneShot(clip);
+            AudioClip clip = AudioClip.Create("sample", (int)frames, 1, 44100, false);
+            clip.SetData(samples, 0);
+            _audio.clip = clip;
+            _audio.Play();
         }
 
         public unsafe void RetroInputPoll()
