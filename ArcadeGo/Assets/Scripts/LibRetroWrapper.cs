@@ -30,9 +30,6 @@ namespace LibRetroWrapper
         private DelegateDefinition.RetroInputStateDelegate _inputState;
         private DelegateDefinition.RetroLogDelegate _logDelegate;
 
-        public static byte[] source;
-        public static byte[] dest;
-
         private uint current_width = 0;
         private uint current_height = 0;
         private uint current_pitch = 0;
@@ -43,15 +40,20 @@ namespace LibRetroWrapper
         public Int16 gun_x = 0;
         public Int16 gun_y = 0;
 
+        public static byte[] dest;
         private unsafe void RetroVideoRefresh(void* data, uint width, uint height, uint pitch)
         {
+            if (data == null)
+            {
+                return;
+            }
+
             byte * pixels = (byte*)data;
             
             switch (pixelFormat)
             {
                 case RetroEnums.RetroPixelFormat.RETRO_PIXEL_FORMAT_XRGB8888:
                     {
-                        int sourceSize = (int)(pitch * height);
                         int destSize = (int)(width * height * sizeof(uint));
 
                         if (tex == null || dest == null || width != current_width || height != current_height)
@@ -62,7 +64,6 @@ namespace LibRetroWrapper
 
                         current_width = width;
                         current_height = height;
-                        current_pitch = pitch;
                         
                         int idx = 0;
                         for (int y = 0; y < height; y++)
@@ -73,7 +74,7 @@ namespace LibRetroWrapper
                                 idx++;
                             }
                         }
-                        
+
                         tex.LoadRawTextureData(dest);
                         tex.filterMode = FilterMode.Bilinear;
 
@@ -93,24 +94,24 @@ namespace LibRetroWrapper
         
         public unsafe void RetroAudioSampleBatch(short* data, uint frames)
         {
-            if (_audio == null)
-            {
-                return;
-            }
+            //if (_audio == null)
+            //{
+            //    return;
+            //}
 
-            short* ptr = data;
-            float[] samples = new float[frames];
+            //short* ptr = data;
+            //float[] samples = new float[frames];
 
-            for (int i = 0; i < frames; i++)
-            {
-                float value = Mathf.Clamp(*ptr / 32768.0f,-1.0f,1.0f);
-                samples[i] = value;
-                ptr += sizeof(short);
-            }
+            //for (int i = 0; i < frames; i++)
+            //{
+            //    float value = Mathf.Clamp(*ptr / 32768.0f,-1.0f,1.0f);
+            //    samples[i] = value;
+            //    ptr += sizeof(short);
+            //}
 
-            AudioClip clip = AudioClip.Create("sample", (int)frames, 1, 44100, false);
-            clip.SetData(samples, 0);
-            _audio.PlayOneShot(clip);
+            //AudioClip clip = AudioClip.Create("sample", (int)frames, 1, 44100, false);
+            //clip.SetData(samples, 0);
+            //_audio.PlayOneShot(clip);
         }
 
         public unsafe void RetroInputPoll()
@@ -206,7 +207,7 @@ namespace LibRetroWrapper
             {
                 case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_GET_CAN_DUPE:
                     bool* canDupe = (bool*)data;
-                    *canDupe = false;
+                    *canDupe = true;
                     break;
 
                 case RetroEnums.ConfigurationConstants.RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL:
@@ -292,10 +293,10 @@ namespace LibRetroWrapper
                                     value = "precache";
                                     break;
 
-                                //case "beetle_psx_frame_duping":
-                                //case "beetle_psx_hw_frame_duping":
-                                //    value = "enabled";
-                                //    break;
+                                case "beetle_psx_frame_duping":
+                                case "beetle_psx_hw_frame_duping":
+                                    value = "enabled";
+                                    break;
 
                                 //case "beetle_psx_adaptive_smoothing":
                                 //case "beetle_psx_hw_adaptive_smoothing":
